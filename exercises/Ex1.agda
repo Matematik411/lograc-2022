@@ -232,7 +232,7 @@ data Even : ℕ → Set where
   even-z : Even zero
   even-ss : {n : ℕ} → Even n → Even (suc (suc n))
 
-
+-- ta ne gre... kar je ok
 -- 3Even : Even 3
 -- 3Even = even-ss {! even-ss  !}
 {-
@@ -240,9 +240,7 @@ data Even : ℕ → Set where
 -}
 
 data Even₂ : Bin → Set where
-   even2 : {b : Bin} → Even₂ (b O)
-   -- even2 : {b : Bin} → Even₂ (b-incr (b-incr b))
-  {- EXERCISE: add the constructors for this inductive predicate here -}
+   even₂ : {b : Bin} → Even₂ (b O)
 
 ----------------
 -- Exercise 7 --
@@ -254,11 +252,12 @@ data Even₂ : Bin → Set where
 -}
 
 to-even : {n : ℕ} → Even n → Even₂ (to n)
-to-even {zero} even-z = even2 
-to-even (even-ss p) = {!  !}
+to-even even-z = even₂
+to-even (even-ss p) = double-incr-even (to-even p)
    where
-      to-even-aux : {b : Bin} → Even₂ b → Even₂ (b O)
-      to-even-aux even2 = even2
+      double-incr-even : {b : Bin} → Even₂ b → Even₂ (b-incr (b-incr b))
+      double-incr-even even₂ = even₂
+
 
 ----------------
 -- Exercise 8 --
@@ -278,7 +277,8 @@ to-even (even-ss p) = {!  !}
 -}
 
 data NonEmptyBin : Bin → Set where
-  {- EXERCISE: add the constructors for this inductive predicate here -}
+  neO : {b : Bin} → NonEmptyBin (b O)
+  neI : {b : Bin} → NonEmptyBin (b I)
 
 {-
    To verify that `NonEmptyBin ⟨⟩` is indeed not inhabited as intended,
@@ -289,7 +289,7 @@ data NonEmptyBin : Bin → Set where
 data ⊥ : Set where
 
 ⟨⟩-empty : NonEmptyBin ⟨⟩ → ⊥
-⟨⟩-empty p = {!!}
+⟨⟩-empty ()
 
 
 ----------------
@@ -306,7 +306,12 @@ data ⊥ : Set where
 -}
 
 from-ne : (b : Bin) → NonEmptyBin b → ℕ
-from-ne b p = {!!}
+from-ne (⟨⟩ O) neO = zero
+from-ne (b O O) neO = 2 * (from-ne (b O) neO)
+from-ne (b I O) neO = 2 * (from-ne (b I) neI)
+from-ne (⟨⟩ I) neI = suc zero
+from-ne (b O I) neI = 2 * (from-ne (b O) neO) + 1
+from-ne (b I I) neI = 2 * (from-ne (b I) neI) + 1
 
 
 -----------------
@@ -339,9 +344,19 @@ infixr 5 _∷_
 -}
 
 map : {A B : Set} → (A → B) → List A → List B
-map f xs = {!!}
+map f [] = []
+map f (x ∷ xs) = f x ∷ map f xs
 
 
+range : ℕ → List ℕ
+range zero = []
+range (suc n) = n ∷ range n
+
+
++ena : ℕ → ℕ
++ena n = suc n
+
+-- map +ena (range 5) gives 5 ∷ 4 ∷ 3 ∷ 2 ∷ 1 ∷ [] .... CORRECT
 -----------------
 -- Exercise 11 --
 -----------------
@@ -351,7 +366,8 @@ map f xs = {!!}
 -}
 
 length : {A : Set} → List A → ℕ
-length xs = {!!}
+length [] = zero
+length (x ∷ xs) = suc (length xs)
 
 -----------------
 -- Exercise 12 --
@@ -372,7 +388,8 @@ data _≡ᴺ_ : ℕ → ℕ → Set where
 -}
 
 map-≡ᴺ : {A B : Set} {f : A → B} → (xs : List A) → length xs ≡ᴺ length (map f xs)
-map-≡ᴺ xs = {!!}
+map-≡ᴺ [] = z≡ᴺz
+map-≡ᴺ (x ∷ xs) = s≡ᴺs (map-≡ᴺ xs)
 
 
 -----------------
@@ -396,11 +413,13 @@ infix 4 _≤_
 -}
 
 data _≤ᴸ_ {A : Set} : List A → List A → Set where
-  {- EXERCISE: add the constructors for this inductive relation here -}
+  e≤ᴸxs : {xs : List A} → [] ≤ᴸ xs
+  c≤ᴸc : {x y : A} → {xs ys : List A} → xs ≤ᴸ ys → (x ∷ xs) ≤ᴸ (y ∷ ys)
 
 infix 4 _≤ᴸ_
 
-
+-- 5≤ᴸ3 : (range 5) ≤ᴸ (range 3)
+-- 5≤ᴸ3 = c≤ᴸc (c≤ᴸc (c≤ᴸc {!   !}))
 -----------------
 -- Exercise 14 --
 -----------------
@@ -411,10 +430,12 @@ infix 4 _≤ᴸ_
 -}
 
 length-≤ᴸ-≦ : {A : Set} {xs ys : List A} → xs ≤ᴸ ys → length xs ≤ length ys
-length-≤ᴸ-≦ p = {!!}
+length-≤ᴸ-≦ e≤ᴸxs = z≤n
+length-≤ᴸ-≦ (c≤ᴸc p) = s≤s (length-≤ᴸ-≦ p)
 
 length-≤-≦ᴸ : {A : Set} (xs ys : List A) → length xs ≤ length ys → xs ≤ᴸ ys
-length-≤-≦ᴸ xs ys p = {!!}
+length-≤-≦ᴸ [] ys z≤n = e≤ᴸxs
+length-≤-≦ᴸ (x ∷ xs) (x₁ ∷ ys) (s≤s p) = c≤ᴸc (length-≤-≦ᴸ xs ys p)
 
 
 -----------------
