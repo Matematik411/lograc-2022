@@ -535,8 +535,9 @@ Finally, to combine two relations, here is antisymmetry of $\leq$:
 
 ```
 antisym-≤ : {m n : ℕ} → m ≤ n → n ≤ m → n ≡ᴺ m
-antisym-≤ z≤n z≤n = z≡ᴺz
-antisym-≤ (s≤s p) (s≤s q) = s≡ᴺs (antisym-≤ p q)
+antisym-≤ {zero} {zero} m≤n n≤m = z≡ᴺz
+antisym-≤ {suc m} {suc n} (s≤s p) (s≤s q) = s≡ᴺs (antisym-≤ p q)
+
 ```
 
 ## Other inductive datatypes
@@ -628,12 +629,6 @@ reverse {A} xs = rev [] xs
      rev acc [] = acc
      rev acc (x ∷ xs) = rev (x ∷ acc) xs
 
-
--- reverse {A} xs = rev [] xs
---   where
---     rev : List A → List A → List A
---     rev xs [] = xs
---     rev xs (x ∷ ys) = rev (x ∷ xs) ys
 ```
 
 We see that the local definition of `rev` is in the `where` block that comes *after* its use. The block may contain multiple definitions, as well as `open` statements and other things, see [Agda documentation on `let` and `where`](https://agda.readthedocs.io/en/latest/language/let-and-where.html). Also observe that the definition of `rev` refers to `A`, which is an implicit argument to `reverse`. If we pull out the local definition of `rev` then it gets an extra argument:
