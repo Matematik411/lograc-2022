@@ -63,7 +63,11 @@ data Bool : Set where
 -}
 
 _⊕_ : Bool → Bool → Bool
-b ⊕ b' = {!!}
+true ⊕ true = false
+true ⊕ false = true
+false ⊕ true = true
+false ⊕ false = false
+
 
 {-
    You can test whether your definition computes correctly by using
@@ -95,7 +99,7 @@ data ℕ : Set where
 -}
 
 incr : ℕ → ℕ
-incr n = {!!}
+incr n = suc n
 
 {-
    Define a function that decrements a number by one. Give the definition
@@ -103,15 +107,17 @@ incr n = {!!}
 -}
 
 decr : ℕ → ℕ
-decr n = {!!}
+decr zero = zero
+decr (suc n) = n
 
 {-
    Define a function that triples the value of a given number.
    Your definition should use both pattern-matching and recursion.
 -}
-
+-- 3n = 3(n-1) + 3
 triple : ℕ → ℕ
-triple n = {!!}
+triple zero = zero
+triple (suc n) = suc (suc (suc (triple n)))
 
 
 ----------------
@@ -140,9 +146,10 @@ infixl 7  _*_
    Define exponentiation m^n using pattern-matching, recursion,
    and the operations on natural numbers defined above.
 -}
-
+-- m^n = m^(n-1) * m
 _^_ : ℕ → ℕ → ℕ
-m ^ n = {!!}
+m ^ zero = suc zero
+m ^ suc n = m * (m ^ n)
 
 infixl 8  _^_
 
@@ -178,7 +185,9 @@ infixl 20 _I
 -}
 
 b-incr : Bin → Bin
-b-incr b = {!!}
+b-incr ⟨⟩ = ⟨⟩ I
+b-incr (b O) = b I
+b-incr (b I) = (b-incr b) O
 
 
 ----------------
@@ -195,11 +204,21 @@ b-incr b = {!!}
 -}
 
 to : ℕ → Bin
-to n = {!!}
+to zero = ⟨⟩ O
+to (suc n) = b-incr (to n)
+
+from-r : Bin → ℕ
+from-r ⟨⟩ = 0
+from-r (b O) = (from-r b) * 2
+from-r (b I) = (from-r b) * 2 + 1
 
 from : Bin → ℕ
-from b = {!!}
-
+from b = from-aux b 0
+   where
+   from-aux : Bin → ℕ → ℕ
+   from-aux ⟨⟩ n = 0
+   from-aux (b O) n = from-aux b (suc n)
+   from-aux (b I) n = (from-aux b (suc n)) + 2 ^ n
 
 ----------------
 -- Exercise 6 --
@@ -213,13 +232,17 @@ data Even : ℕ → Set where
   even-z : Even zero
   even-ss : {n : ℕ} → Even n → Even (suc (suc n))
 
+
+-- 3Even : Even 3
+-- 3Even = even-ss {! even-ss  !}
 {-
    Define an analogous "is even" predicate for binary numbers.
 -}
 
 data Even₂ : Bin → Set where
+   even2 : {b : Bin} → Even₂ (b O)
+   -- even2 : {b : Bin} → Even₂ (b-incr (b-incr b))
   {- EXERCISE: add the constructors for this inductive predicate here -}
-
 
 ----------------
 -- Exercise 7 --
@@ -231,8 +254,11 @@ data Even₂ : Bin → Set where
 -}
 
 to-even : {n : ℕ} → Even n → Even₂ (to n)
-to-even p = {!!}
-
+to-even {zero} even-z = even2 
+to-even (even-ss p) = {!  !}
+   where
+      to-even-aux : {b : Bin} → Even₂ b → Even₂ (b O)
+      to-even-aux even2 = even2
 
 ----------------
 -- Exercise 8 --
