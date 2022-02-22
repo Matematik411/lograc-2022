@@ -120,6 +120,7 @@ triple zero = zero
 triple (suc n) = suc (suc (suc (triple n)))
 
 
+
 ----------------
 -- Exercise 3 --
 ----------------
@@ -207,18 +208,18 @@ to : ℕ → Bin
 to zero = ⟨⟩ O
 to (suc n) = b-incr (to n)
 
-from-r : Bin → ℕ
-from-r ⟨⟩ = 0
-from-r (b O) = (from-r b) * 2
-from-r (b I) = (from-r b) * 2 + 1
-
 from : Bin → ℕ
-from b = from-aux b 0
+from ⟨⟩ = 0
+from (b O) = (from b) * 2
+from (b I) = 1 + 2 *(from b)
+
+from' : Bin → ℕ
+from' b = from'-aux b 0
    where
-   from-aux : Bin → ℕ → ℕ
-   from-aux ⟨⟩ n = 0
-   from-aux (b O) n = from-aux b (suc n)
-   from-aux (b I) n = (from-aux b (suc n)) + 2 ^ n
+   from'-aux : Bin → ℕ → ℕ
+   from'-aux ⟨⟩ n = 0
+   from'-aux (b O) n = from'-aux b (suc n)
+   from'-aux (b I) n = (from'-aux b (suc n)) + 2 ^ n
 
 ----------------
 -- Exercise 6 --
@@ -452,3 +453,42 @@ length-≤-≦ᴸ (x ∷ xs) (x₁ ∷ ys) (s≤s p) = c≤ᴸc (length-≤-≦�
    - "less than or equal" order
    - show that `from` takes even numbers to even numbers
 -}
+
+
+_B+_ : Bin → Bin → Bin
+⟨⟩ B+ b = b
+a B+ ⟨⟩ = a
+(a O) B+ (b O) = (a B+ b) O
+(a O) B+ (b I) = (a B+ b) I
+(a I) B+ (b O) = (a B+ b) I
+(a I) B+ (b I) = ((b-incr a) B+ b) O
+
+_B*_ : Bin → Bin → Bin
+a B* b = BinProdAux (⟨⟩ O) a b
+   where
+      BinProdAux : Bin → Bin → Bin → Bin
+      BinProdAux acc ⟨⟩ y = acc
+      BinProdAux acc (x O) y = BinProdAux acc x (y O)
+      BinProdAux acc (x I) y = BinProdAux (acc B+ y) x (y O)
+
+
+infix 4 _≡ᴮ_
+data _≡ᴮ_ : Bin → Bin → Set where
+  z≡ᴮz : ⟨⟩ O ≡ᴮ ⟨⟩ O
+  s≡ᴮs : {a b : Bin} → a ≡ᴮ b → (b-incr a) ≡ᴮ (b-incr b)
+
+infix 4 _≤ᴮ_
+data _≤ᴮ_ : Bin → Bin → Set where
+  z≤ᴮb : {b : Bin} → ⟨⟩ O ≤ᴮ b
+  s≤ᴮs : {a b : Bin} → a ≤ᴮ b → (b-incr a) ≤ᴮ (b-incr b)
+
+
+
+from-even : {b : Bin} → Even₂ b → Even (from b)
+from-even (even₂ {b}) = aux {from b}
+   where
+      aux : {n : ℕ} → Even (n * 2)
+      aux {zero} = even-z
+      aux {suc n} = even-ss {n * 2} (aux {n})
+
+
