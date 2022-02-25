@@ -98,16 +98,19 @@ postulate
    Start by proving the following simple equational properties about
    natural numbers and addition. Hint: Use induction. You might find
    it useful to recall the congruence principle `cong` from lecture.
+   'cong' -> using a function on an equality
 -}
 
 +-identityʳ : (n : ℕ) → n + zero ≡ n
-+-identityʳ n = {!!}
++-identityʳ zero = refl
++-identityʳ (suc n) = cong suc (+-identityʳ n)
 
 +-identityˡ : (n : ℕ) → zero + n ≡ n
-+-identityˡ n = {!!}
++-identityˡ n = refl
 
 +-suc : (n m : ℕ) → n + (suc m) ≡ suc (n + m)
-+-suc n m = {!!}
++-suc zero m = cong suc refl
++-suc (suc n) m = cong suc (+-suc n m)
 
 
 ----------------
@@ -141,7 +144,9 @@ data Maybe (A : Set) : Set where
   nothing : Maybe A
 
 lookup : {A : Set} {n : ℕ} → Vec A n → ℕ → Maybe A
-lookup xs i = {!!}
+lookup [] i = nothing
+lookup (x ∷ xs) zero = just x
+lookup (x ∷ xs) (suc i) = lookup xs i
 
 
 ----------------
@@ -179,7 +184,15 @@ lookup-totalᵀ : {n : ℕ}
               → i < n                           -- `i` in `{0,1,...,n-1}`
               → lookup xs i ≡ just ⋆
              
-lookup-totalᵀ xs i p = {!!}
+lookup-totalᵀ (⋆ ∷ xs) zero p = refl
+lookup-totalᵀ (x ∷ xs) (suc i) (s≤s p) = lookup-totalᵀ xs i p
+
+-- LONG WAY ..
+-- lookup-totalᵀ (x ∷ xs) (suc i) p = lookup-totalᵀ xs i (lookup-aux p)
+--    where
+--       lookup-aux : {m n : ℕ} → suc m < suc n → m < n
+--       lookup-aux (s≤s p) = p
+   
 
 {-
    Note: In the standard library, `⊤` is defined as a record type. Here
@@ -217,8 +230,12 @@ data Fin : ℕ → Set where
   zero : {n : ℕ} → Fin (suc n)
   suc  : {n : ℕ} (i : Fin n) → Fin (suc n)
 
+foo : Fin 3
+foo = suc (suc zero)
+
 safe-lookup : {A : Set} {n : ℕ} → Vec A n → Fin n → A
-safe-lookup xs i = {!!}
+safe-lookup (x ∷ xs) zero = x
+safe-lookup (x ∷ xs) (suc i) = safe-lookup xs i 
 
 
 ----------------
@@ -238,8 +255,11 @@ safe-lookup xs i = {!!}
    the correct type, the yellow highlighting below will disappear.
 -}
 
-nat-to-fin : {!!}
-nat-to-fin = {!!}
+
+
+nat-to-fin : {n : ℕ} → (i : ℕ) → (i < n) → Fin n
+nat-to-fin zero (s≤s p) = zero
+nat-to-fin (suc i) (s≤s p) = suc (nat-to-fin i p) 
 
 lookup-correct : {A : Set} {n : ℕ}
                → (xs : Vec A n)
@@ -247,7 +267,8 @@ lookup-correct : {A : Set} {n : ℕ}
                → (p : i < n)
                → lookup xs i ≡ just (safe-lookup xs (nat-to-fin i p))
 
-lookup-correct x i p = {!!}
+lookup-correct (x ∷ xs) zero (s≤s p) = refl
+lookup-correct (x ∷ xs) (suc i) (s≤s p) = lookup-correct xs i p
 
 
 ----------------
@@ -260,7 +281,8 @@ lookup-correct x i p = {!!}
 -}
 
 take-n : {A : Set} {n m : ℕ} → Vec A (n + m) → Vec A n
-take-n xs = {!!}
+take-n {n = zero} xs = []
+take-n {n = suc n} (x ∷ xs) = x ∷ (take-n xs)
 
 
 ----------------
@@ -272,6 +294,7 @@ take-n xs = {!!}
    a vector of length `m + n`. Hint: Do not define this function
    by recursion. Use `take-n` and equational reasoning instead.
 -}
+
 
 take-n' : {A : Set} {n m : ℕ} → Vec A (m + n) → Vec A n
 take-n' xs = {!!}
