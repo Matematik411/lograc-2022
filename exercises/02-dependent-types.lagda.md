@@ -551,22 +551,31 @@ Consequently, the concatenation operator `_++_` for lists does not keep track of
 ```
 length-++ : {A : Set} (xs ys : List A) → length (xs ++ ys) ≡ length xs + length ys
 length-++ [] ys = refl
-length-++ (x ∷ xs) ys = cong suc (length-++ xs _)
+length-++ (x ∷ xs) ys = cong suc (length-++ xs ys)
 ```
 
 The same goes for the fact that reversal of lists preserves length:
 
 ```
+-- private
+--   list-rev : {A : Set} → List A → List A → List A
+--   list-rev xs [] = xs
+--   list-rev xs (x ∷ ys) = list-rev (x ∷ xs) ys
+
+-- list-reverse : {A : Set} → List A → List A
+-- list-reverse {A} xs = list-rev [] xs
+
+
 length-reverse : {A : Set} {xs : List A} → length (list-reverse xs) ≡ length xs
 length-reverse {A} {xs} = length-rev [] xs
   where
-    length-rev : (xs ys : List A) → length (list-rev xs ys) ≡ length xs + length ys
-    length-rev xs [] = sym (+-identityʳ _)
-    length-rev xs (x ∷ ys) =
+    length-rev : (us vs : List A) → length (list-rev us vs) ≡ length us + length vs
+    length-rev us [] = sym (+-identityʳ (length us))
+    length-rev us (x ∷ vs) =
       begin
-        length (list-rev xs (x ∷ ys)) ≡⟨ length-rev (x ∷ xs) ys ⟩
-        length (x ∷ xs) + length ys   ≡⟨ sym (+-suc _ _) ⟩
-        length xs + length (x ∷ ys)
+        length (list-rev us (x ∷ vs))   ≡⟨ length-rev (x ∷ us) vs ⟩
+        length (x ∷ us) + length vs     ≡⟨ sym (+-suc (length us) (length vs) ) ⟩
+        length us + length (x ∷ vs)
       ∎
 ```
 
@@ -616,30 +625,31 @@ Let us work through proofs showing the basic properties of `∈`. First, if a li
     ∈-rev-r ys {z ∷ zs} (∈-there p) = ∈-rev-r (z ∷ ys) p
 
     ∈-rev-l {ys = ys} [] p = p
-    ∈-rev-l {ys = ys} (z ∷ zs) p = ∈-rev-l zs (∈-there p)
+    ∈-rev-l {ys = ys} (z ∷ zs) p = ∈-rev-l zs (∈-there p) 
 ```
 
-Second, if `z` is an element of `xs` then it is also an element of `ys`, and symmetrically for `ys`:
+Second, if `z` is an element of `xs` then it is also an element of `xs ++ ys`, and symmetrically for `ys`:
 
 ```
 ∈-++ʳ : {A : Set} {xs ys : List A} {z : A} → z ∈ ys → z ∈ xs ++ ys
 ∈-++ʳ {xs = []} p = p
-∈-++ʳ {xs = x₁ ∷ xs} p = ∈-there (∈-++ʳ p)
+∈-++ʳ {xs = x ∷ xs} p = ∈-there (∈-++ʳ p) 
 
 ∈-++ˡ : {A : Set} {xs ys : List A} {z : A} → z ∈ xs → z ∈ xs ++ ys
 ∈-++ˡ ∈-here = ∈-here
-∈-++ˡ (∈-there p) = ∈-there (∈-++ˡ p)
+∈-++ˡ (∈-there p) = ∈-there ( ∈-++ˡ p)
 ```
 
 Third, if `z` is an element of `xs ++ ys` then it is an element of `xs` or `ys`:
 
 ```
 ∈-++ : {A : Set} {xs ys : List A} {z : A} → z ∈ xs ++ ys → z ∈ xs ⊎ z ∈ ys
-∈-++ {xs = []} p = inj₂ p
+∈-++ {xs = []} p = inj₂ p 
 ∈-++ {xs = x ∷ xs} ∈-here = inj₁ ∈-here
 ∈-++ {xs = x ∷ xs} {ys} {z} (∈-there p) with ∈-++ p
-...                                        | inj₁ x = inj₁ (∈-there x)
-...                                        | inj₂ y = inj₂ y
+...                                       | inj₁ x₁ = inj₁ (∈-there x₁)
+...                                       | inj₂ y = inj₂ y
+
 ```
 
 ### Unit-testing with equality
@@ -663,5 +673,5 @@ that the desired property holds for *all* cases. Can you do it?
 
 ```
 reverse-++ : {A : Set} (xs ys : List A) → list-reverse (xs ++ ys) ≡ list-reverse ys ++ list-reverse xs
-reverse-++ {A} xs ys = {!   !}
+reverse-++ {A} xs ys = {!  !}
 ```
