@@ -66,6 +66,7 @@ import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl; sym; trans; cong; subst; resp)
 open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; step-≡; _∎)
 open import Axiom.Extensionality.Propositional using (Extensionality)
+open import Data.Nat.Properties using (+-comm)
 
 {-
    We also postulate the principle of function extensionality so
@@ -282,7 +283,7 @@ lookup-correct (x ∷ xs) (suc i) (s≤s p) = lookup-correct xs i p
 
 take-n : {A : Set} {n m : ℕ} → Vec A (n + m) → Vec A n
 take-n {n = zero} xs = []
-take-n {n = suc n} (x ∷ xs) = x ∷ (take-n xs)
+take-n {n = suc n} (x ∷ xs) = x ∷ (take-n xs) 
 
 
 ----------------
@@ -297,7 +298,7 @@ take-n {n = suc n} (x ∷ xs) = x ∷ (take-n xs)
 
 
 take-n' : {A : Set} {n m : ℕ} → Vec A (m + n) → Vec A n
-take-n' xs = {!!}
+take-n' {n = n} {m = m} xs rewrite +-comm m n = take-n xs
 
 
 ----------------
@@ -310,7 +311,8 @@ take-n' xs = {!!}
 -}
 
 vec-list : {A : Set} {n : ℕ} → Vec A n → List A
-vec-list xs = {!!}
+vec-list [] = [] 
+vec-list (x ∷ xs) = x ∷ (vec-list xs)
 
 {-
    Define a function from lists to vectors that is identity on the
@@ -320,8 +322,9 @@ vec-list xs = {!!}
    natural number specifying the length of the returned vector.
 -}
 
-list-vec : {A : Set} → (xs : List A) → Vec A {!!}
-list-vec xs = {!!}
+list-vec : {A : Set} → (xs : List A) → Vec A (length xs)
+list-vec [] = []
+list-vec (x ∷ xs) = x ∷ (list-vec xs)
 
 
 ----------------
@@ -337,7 +340,8 @@ vec-list-length : {A : Set} {n : ℕ}
                 → (xs : Vec A n)
                 → n ≡ length (vec-list xs)
                 
-vec-list-length xs = {!!}
+vec-list-length [] = refl
+vec-list-length (x ∷ xs) = cong suc (vec-list-length xs)
 
 
 ----------------
@@ -366,8 +370,13 @@ Matrix A m n = Vec (Vec A n) m
    of two vectors of the same length.
 -}
 
+_+ⱽ_ : {n : ℕ} → Vec ℕ n → Vec ℕ n → Vec ℕ n
+[] +ⱽ [] = []
+(x ∷ u) +ⱽ (y ∷ v) = (x + y) ∷ (u +ⱽ v)
+
 _+ᴹ_ : {m n : ℕ} → Matrix ℕ m n → Matrix ℕ m n → Matrix ℕ m n
-xss +ᴹ yss = {!!}
+[] +ᴹ [] = []
+(xss ∷ xss₁) +ᴹ (yss ∷ yss₁) = (xss +ⱽ yss) ∷ (xss₁ +ᴹ yss₁)
 
 
 -----------------------------
@@ -747,3 +756,4 @@ vec-list-vec = {!!}
 -----------------------------------
 -----------------------------------
 
+ 
