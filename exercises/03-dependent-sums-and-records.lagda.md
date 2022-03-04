@@ -203,7 +203,7 @@ We can use `Σ`-types to express the theorem in Agda:
 
 ```
   parity₃ : (n : ℕ) → Σ[ k ∈ ℕ ] Σ[ b ∈ Fin 2 ] (n ≡ 2 * k + toℕ b)
-  parity₃ zero = 0 , zero , refl
+  parity₃ zero = {!   !}
   parity₃ (suc n) with parity₃ n
   ... | k , zero , ξ = k , (suc zero) , ζ
     where

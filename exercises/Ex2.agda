@@ -404,7 +404,11 @@ _+ᴹ_ : {m n : ℕ} → Matrix ℕ m n → Matrix ℕ m n → Matrix ℕ m n
 list-vec-list : {A : Set}
               → vec-list ∘ list-vec ≡ id {A = List A}
               
-list-vec-list = {!!}
+list-vec-list {A} = fun-ext aux-lvl
+   where
+      aux-lvl : (xs : List A) → (vec-list ∘ list-vec) xs ≡ id xs
+      aux-lvl [] = refl
+      aux-lvl (x ∷ xs) = cong (x ∷_) (aux-lvl xs)
 
 
 -----------------
@@ -420,9 +424,18 @@ list-vec-list = {!!}
    Hint 2: When defining `transpose`, think how you would express it
    in terms of the transpose of the submatrix without the first row.
 -}
+populate : {A : Set} {n : ℕ} → (x : A) → Vec A n
+populate {n = zero} x = []
+populate {n = suc n} x = x ∷ (populate x)
+
 
 transpose : {A : Set} {m n : ℕ} → Matrix A m n → Matrix A n m
-transpose xss = {!!}
+transpose [] = populate []
+transpose {A} (xs ∷ xss) = aux-transpose xs (transpose xss)
+   where 
+      aux-transpose : {k l : ℕ} → Vec A k → Matrix A k l → Matrix A k (suc l)
+      aux-transpose [] [] = []
+      aux-transpose (x ∷ v) (m ∷ ms) = (x ∷ m) ∷ (aux-transpose v ms)
 
 
 -----------------
@@ -461,7 +474,15 @@ data _</≡/>_ (n m : ℕ) : Set where
 -}
 
 test-</≡/> : (n m : ℕ) → n </≡/> m
-test-</≡/> n m = {!!}
+test-</≡/> zero zero = n≡m refl
+test-</≡/> (suc n) zero = n>m (s≤s z≤n)
+test-</≡/> zero (suc m) = n<m (s≤s z≤n)
+test-</≡/> (suc n) (suc m) = </≡/>-suc (test-</≡/> n m)
+   where
+      </≡/>-suc : {n m : ℕ} → n </≡/> m → suc n </≡/> suc m
+      </≡/>-suc (n<m x) = n<m (s≤s x)
+      </≡/>-suc (n≡m x) = n≡m (cong suc x)
+      </≡/>-suc (n>m x) = n>m (s≤s x)
 
 
 -----------------
@@ -515,7 +536,11 @@ data Tree (A : Set) : Set where
 -}
 
 insert : Tree ℕ → ℕ → Tree ℕ
-insert t n = {!!}
+insert empty n = node empty n empty
+insert (node l x r) n with test-</≡/> n x  
+... | n<m _ = node (insert l n) x r
+... | n≡m _ = node l x r
+... | n>m _ = node l x (insert r n)
 
 {-
    As a sanity check, prove that inserting 12, 27, and 52 into the above
@@ -525,17 +550,17 @@ insert t n = {!!}
 insert-12 : insert (node (node empty 22 (node empty 32 empty)) 42 (node empty 52 empty)) 12
             ≡
             node (node (node empty 12 empty) 22 (node empty 32 empty)) 42 (node empty 52 empty)
-insert-12 = {!!}
+insert-12 = refl
 
 insert-27 : insert (node (node empty 22 (node empty 32 empty)) 42 (node empty 52 empty)) 27
             ≡
             node (node empty 22 (node (node empty 27 empty) 32 empty)) 42 (node empty 52 empty)
-insert-27 = {!!}            
+insert-27 = refl            
 
 insert-52 : insert (node (node empty 22 (node empty 32 empty)) 42 (node empty 52 empty)) 52
             ≡
             node (node empty 22 (node empty 32 empty)) 42 (node empty 52 empty)
-insert-52 = {!!}
+insert-52 = refl
 
 
 -----------------
@@ -551,7 +576,9 @@ insert-52 = {!!}
 -}
 
 data _∈_ (n : ℕ) : Tree ℕ → Set where
-  {- EXERCISE: the constructors for the `∈` relation go here -}
+   ∈-here : {l r : Tree ℕ} → n ∈ node l n r
+   ∈-left : {l r : Tree ℕ} {x : ℕ} → n ∈ l → n ∈ node l x r  
+   ∈-right : {l r : Tree ℕ} {x : ℕ} → n ∈ r → n ∈ node l x r  
 
 
 {-
@@ -571,7 +598,11 @@ data _∈_ (n : ℕ) : Tree ℕ → Set where
 -}
 
 insert-∈ : (t : Tree ℕ) → (n : ℕ) → n ∈ (insert t n)
-insert-∈ t n = {!!}
+insert-∈ empty n = ∈-here
+insert-∈ (node l x r) n with test-</≡/> n x 
+... | n<m p = ∈-left (insert-∈ l n)
+... | n≡m p = {!  !}
+... | n>m p = ∈-right (insert-∈ r n)
 
 
 -----------------------------------

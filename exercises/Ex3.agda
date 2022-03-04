@@ -416,6 +416,8 @@ data _∈_ {A : Set} : A → List A → Set where
   ∈-there : {x y : A} {xs : List A} → x ∈ xs → x ∈ (y ∷ xs)
 
 data NoDup {A : Set} : List A → Set where
+   empt-NoDup : NoDup []
+   none-NoDup : {x : A} {xs : List A} → NoDup xs → ¬ (x ∈ xs) → NoDup (x ∷ xs)
   {- EXERCISE: replace this comment with constructors for `NoDup` -}
 
 {-
