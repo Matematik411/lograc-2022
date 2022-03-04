@@ -66,7 +66,7 @@ import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl; sym; trans; cong; subst; resp)
 open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; step-≡; _∎)
 open import Axiom.Extensionality.Propositional using (Extensionality)
-open import Data.Nat.Properties using (+-comm)
+open import Data.Nat.Properties using (+-comm; <-trans)
 
 {-
    We also postulate the principle of function extensionality so
@@ -601,7 +601,7 @@ insert-∈ : (t : Tree ℕ) → (n : ℕ) → n ∈ (insert t n)
 insert-∈ empty n = ∈-here
 insert-∈ (node l x r) n with test-</≡/> n x 
 ... | n<m p = ∈-left (insert-∈ l n)
-... | n≡m p = {!  !}
+... | n≡m p rewrite p = ∈-here
 ... | n>m p = ∈-right (insert-∈ r n)
 
 
@@ -691,11 +691,19 @@ data IsBST : Tree ℕ → Set where
    Hint: You might find it helpful to prove the transitivity of `<∞`.
 -}
 
+<∞-trans : {a b c : ℕ∞} → a <∞ b → b <∞ c → a <∞ c
+<∞-trans {a = -∞} {b = b} {c = c} p q = -∞<n
+<∞-trans {a = [ x ]} {b = [ y ]} {c = [ z ]} ([]<[] p) ([]<[] q) = []<[] (<-trans p q)
+<∞-trans {a = [ x ]} {b = [ y ]} {c = +∞} ([]<[] p) n<+∞ = n<+∞
+<∞-trans {a = [ x ]} {b = +∞} {c = .+∞} n<+∞ n<+∞ = n<+∞
+<∞-trans {a = +∞} {b = .+∞} {c = .+∞} n<+∞ n<+∞ = n<+∞
+
 isbst-rec-<∞ : {lower upper : ℕ∞} {t : Tree ℕ}
              → IsBST-rec lower upper t
              → lower <∞ upper
              
-isbst-rec-<∞ p = {!!}
+isbst-rec-<∞ (empty-bst p) = p
+isbst-rec-<∞ (node-bst p q) = <∞-trans (isbst-rec-<∞ p) (isbst-rec-<∞ q)
 
 {-
    Disclaimer: The `(p : lower <∞ upper)` proof witness in the `empty`
@@ -743,8 +751,20 @@ bst = node-bst
    preserving also the recursively defined `IsBST-rec` relation.
 -}
 
+insert-bst-rec : {lower upper : ℕ∞} (t : Tree ℕ) → (n : ℕ) → (lower <∞ [ n ]) → ([ n ] <∞ upper) → IsBST-rec lower upper t → IsBST-rec lower upper (insert t n)
+insert-bst-rec empty n p q (empty-bst og) = node-bst (empty-bst p) (empty-bst q)
+insert-bst-rec (node l x r) n p q (node-bst og₁ og₂) with test-</≡/> n x 
+... | n<m x₁ = node-bst (insert-bst-rec l n p ([]<[] x₁) og₁) og₂
+... | n≡m x₁ = node-bst og₁ og₂
+... | n>m x₁ = node-bst og₁ (insert-bst-rec r n ([]<[] x₁) q og₂)
+
+
 insert-bst : (t : Tree ℕ) → (n : ℕ) → IsBST t → IsBST (insert t n)
-insert-bst t n p = {!!}
+insert-bst empty n p = node-bst (empty-bst -∞<n) (empty-bst n<+∞)
+insert-bst (node l x r) n (node-bst u v) with test-</≡/> n x
+... | n<m x₁ = node-bst (insert-bst-rec l n -∞<n ([]<[] x₁) u) v
+... | n≡m x₁ = node-bst u v
+... | n>m x₁ = node-bst u (insert-bst-rec r n ([]<[] x₁) n<+∞ v)
 
 
 -----------------
