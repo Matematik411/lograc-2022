@@ -355,7 +355,21 @@ open DecSet
 -}
 
 DecList : (DS : DecSet) → Σ[ DS' ∈ DecSet ] (DSet DS' ≡ List (DSet DS))
-DecList DS = {!   !}
+DecList DS = (
+   record { 
+      DSet = List (DSet DS) ; 
+      test-≡ = check-el }) , refl
+         where
+            check-el : (xs ys : List (DSet DS)) → Dec (xs ≡ ys)
+            check-el [] [] = yes refl
+            check-el [] (x ∷ ys) = no (λ ())
+            check-el (x ∷ xs) [] = no (λ ())
+            check-el (x ∷ xs) (y ∷ ys) with test-≡ DS  x y
+            ... | no p = no λ {refl → p refl}
+            ... | yes refl with check-el xs ys
+            ... | yes refl = yes refl
+            ... | no q = no (λ {refl → q refl})
+       
 
 
 ----------------
@@ -425,36 +439,68 @@ data _∈_ {A : Set} : A → List A → Set where
   ∈-there : {x y : A} {xs : List A} → x ∈ xs → x ∈ (y ∷ xs)
 
 data NoDup {A : Set} : List A → Set where
-   empt-NoDup : NoDup []
-   none-NoDup : {x : A} {xs : List A} → NoDup xs → ¬ (x ∈ xs) → NoDup (x ∷ xs)
-  {- EXERCISE: replace this comment with constructors for `NoDup` -}
+   []-nodup : NoDup []
+   ∷-nodup : {x : A} {xs : List A} → NoDup xs → ¬ (x ∈ xs) → NoDup (x ∷ xs)
 
 {-
    Next, prove some sanity-checks about the correctness of `NoDup`.
 -}
 
 nodup-test₁ : NoDup {ℕ} []
-nodup-test₁ = {!!}
+nodup-test₁ = []-nodup
 
 nodup-test₂ : NoDup (4 ∷ 2 ∷ [])
-nodup-test₂ = {!!}
+nodup-test₂ = ∷-nodup (∷-nodup []-nodup (λ ())) λ {(∈-there ())}
 
 nodup-test₃ : ¬ (NoDup (4 ∷ 2 ∷ 4 ∷ []))
-nodup-test₃ = {!!}
+nodup-test₃ (∷-nodup p q) = q (∈-there ∈-here)
 
 {-
    Finally, prove that `add` preserves the no-duplicates property.
 
    Hint: You might find it useful to prove an auxiliary lemma, showing
    that under certain conditions, if `x` is in `add xs x'`, then `x` was
-   actually already present in `xs` (When would this be the case?).
+   actually already present in `xs` (When would this be the case?). -> when x ≠ x'
 -}
 
-add-nodup : {DS : DecSet} → (xs : List (DSet DS)) → (x : DSet DS)
-          → NoDup {DSet DS} xs
-          → NoDup {DSet DS} (add {DS} xs x)
+add-nodup : {DS : DecSet} 
+   → (xs : List (DSet DS)) 
+   → (x : DSet DS)
+   → NoDup {DSet DS} xs
+   → NoDup {DSet DS} (add {DS} xs x)
 
-add-nodup xs x' p = {!!}
+add-nodup [] x' []-nodup = ∷-nodup []-nodup (λ ())
+add-nodup {DS} (x ∷ xs) x' (∷-nodup p q) with (test-≡ DS x x')
+... | yes refl = ∷-nodup p q
+... | no r = ∷-nodup (add-nodup xs x' p) (q ∘ x≠x'→x∈xs xs r)
+   where
+      ∈-++ : {A : Set} {xs ys : List A} {x : A}
+         → x ∈ xs ++ ys
+         → x ∈ xs ⊎ x ∈ ys
+      
+      ∈-++ {xs = []} {ys = ys} p = inj₂ p
+      ∈-++ {xs = x ∷ xs} {ys = ys} ∈-here = inj₁ ∈-here
+      ∈-++ {xs = x ∷ xs} {ys = ys} (∈-there p) with (∈-++ {xs = xs} {ys = ys} p) 
+      ... | inj₁ q = inj₁ (∈-there q)
+      ... | inj₂ q = inj₂ q
+
+      ⊎-¬ : {A B : Set} → A ⊎ B → ¬ A → B
+      ⊎-¬ (inj₁ x) q = ⊥-elim (q x)
+      ⊎-¬ (inj₂ y) q = y
+
+      x≠x'→x∈xs : {x x' : (DSet DS)} 
+         → (zs : List (DSet DS)) 
+         → x ≢ x'
+         → x ∈ add {DS} zs x'
+         → x ∈ zs
+      x≠x'→x∈xs [] p ∈-here = ⊥-elim (p refl)
+      x≠x'→x∈xs {x = x} {x' = x'} (z ∷ zs) p q with (test-≡ DS z x')
+      ... | yes refl = q
+      ... | no r with (test-≡ DS z x)
+      ... | yes refl = ∈-here
+      ... | no s = ∈-there 
+         (x≠x'→x∈xs zs p (⊎-¬ (∈-++ q) λ {∈-here → s refl}))
+      
 
 
 -----------------
@@ -512,5 +558,59 @@ from-bin' b = from-bin'-aux b 0
 
 open import Data.Nat.Properties
 
+m+m=2m : (m : ℕ) → m + m ≡ 2 * m
+m+m=2m m = 
+   begin
+      m + m
+   ≡⟨ cong (λ x → m + x) (sym (+-identityʳ m)) ⟩
+      m + (m + zero)
+   ∎
+
+power-aux : (n : ℕ) → 2 ^ (suc n) ≡ (2 ^ n) * 2
+power-aux n =
+   begin 
+      (2 ^ n) + ((2 ^ n) + zero)
+   ≡⟨ cong (λ x → (2 ^ n) + x) (+-identityʳ _) ⟩
+      (2 ^ n) + (2 ^ n)
+   ≡⟨ m+m=2m (2 ^ n) ⟩
+      2 * (2 ^ n)
+   ≡⟨ *-comm 2 (2 ^ n) ⟩
+      (2 ^ n) * 2
+   ∎ 
+
 from-bin-≡ : (b : Bin) → from-bin b ≡ from-bin' b
-from-bin-≡ b = {!!}
+from-bin-≡ b = 
+   begin
+   from-bin b
+      ≡⟨ sym (+-identityʳ _) ⟩
+   from-bin b + zero -- ker ta nula na koncu pri definiciji potence
+      ≡⟨ from-bin-aux b 0 ⟩
+   from-bin'-aux b zero
+   ∎
+
+   where
+      from-bin-aux : (b : Bin) → (n : ℕ) → 2 ^ n * from-bin b ≡ from-bin'-aux b n 
+      from-bin-aux ⟨⟩ n = 
+         begin 
+         (2 ^ n) * 0 
+            ≡⟨ (*-zeroʳ (2 ^ n) ) ⟩
+         zero
+         ∎ 
+         
+      from-bin-aux (b O) n = 
+         begin
+            (2 ^ n) * (from-bin b + (from-bin b + zero))
+         ≡⟨ cong (λ x → (2 ^ n) * (from-bin b + x)) (+-identityʳ (from-bin b)) ⟩
+            (2 ^ n) * (from-bin b + from-bin b)
+         ≡⟨ cong (λ x → (2 ^ n) * x) (m+m=2m (from-bin b)) ⟩
+            (2 ^ n) * (2 * (from-bin b)) 
+         ≡⟨ sym ((*-assoc (2 ^ n) 2 (from-bin b))) ⟩
+            ((2 ^ n) * 2) * from-bin b
+         ≡⟨ cong (λ x → x * (from-bin b)) (sym (power-aux n)) ⟩
+            (2 ^ suc n) * from-bin b
+         ≡⟨ from-bin-aux b (suc n) ⟩
+            from-bin'-aux b (suc n)
+         ∎
+         
+
+      from-bin-aux (b I) n = {!   !}
