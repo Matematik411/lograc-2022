@@ -795,10 +795,18 @@ insert-bst (node l x r) n (node-bst u v) with test-</≡/> n x
    on vectors, etc. So we suggest you leave this one for the very last.
 -}
 
+vec-list-len : {A : Set} {n : ℕ} → (v : Vec A n) → Vec A (length (vec-list v))
+vec-list-len [] = []
+vec-list-len (x ∷ v) = x ∷ (vec-list-len v)
+
 vec-list-vec : {A : Set} {n : ℕ}
-             → list-vec ∘ vec-list ≡ {!!}
+             → list-vec ∘ vec-list ≡ vec-list-len
                
-vec-list-vec = {!!}
+vec-list-vec = fun-ext vlv-pointwise
+   where
+      vlv-pointwise : {A : Set} {n : ℕ} → (v : Vec A n) → (list-vec ∘ vec-list) v ≡ vec-list-len v
+      vlv-pointwise [] = refl
+      vlv-pointwise (x ∷ v) = cong (x ∷_) (vlv-pointwise v)
 
 
 -----------------------------------

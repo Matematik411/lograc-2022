@@ -206,16 +206,14 @@ list-ext : {A : Set} {xs ys : List A}
          → xs ≡ ys
 
 list-ext {xs = []} {[]} p q = refl
-list-ext {xs = x ∷ xs} {y ∷ ys} p q = 
-   begin
-      x ∷ xs      ≡⟨ cong (_∷ xs) (q 0 (s≤s z≤n) (s≤s z≤n)) ⟩
-      y ∷ xs      
-         ≡⟨ cong (y ∷_) 
-            (list-ext 
-               (suc-inj p) 
-               (λ i p' q' → {!   !} ))⟩
-      y ∷ ys
-   ∎
+list-ext {xs = x ∷ xs} {ys = y ∷ ys} p q = 
+   begin 
+      x ∷ xs 
+         ≡⟨ cong (_∷ xs) (q 0 (s≤s z≤n) (s≤s z≤n)) ⟩
+      y ∷ xs
+         ≡⟨ cong (y ∷_) (list-ext (suc-inj p) λ i p' q' → q (suc i) (s≤s p') (s≤s q')) ⟩
+      y ∷ ys  
+      ∎
    where
       suc-inj : {m n : ℕ} → _≡_  {A = ℕ} (suc m) (suc n) → m ≡ n
       suc-inj refl = refl
@@ -285,10 +283,10 @@ open _≃_
           ≃
           Σ[ xy ∈ Σ[ x ∈ A ] (B x) ] (C (proj₁ xy) (proj₂ xy))
 -- we don't need lambda functions here
-to       Σ-assoc' = λ {( x , ( y , z )) → (x , y) , z}
-from     Σ-assoc' = λ {((x , y ) , z) → x , (y , z)}
-from∘to  Σ-assoc' = λ { xyz → refl }
-to∘from  Σ-assoc' = λ { xyz → refl }
+to       Σ-assoc' (x , ( y , z)) = (x , y) , z
+from     Σ-assoc' ((x , y ) , z) = x , (y , z)
+from∘to  Σ-assoc' xyz = refl 
+to∘from  Σ-assoc' xyz = refl 
 
 
 ----------------
@@ -318,7 +316,18 @@ to∘from  Σ-assoc' = λ { xyz → refl }
          xs
          ∎ 
    ; 
-   to∘from     = {!   !} }
+   to∘from     = 
+   λ xs → 
+      begin
+         map (to iso) (map (from iso) xs)
+            ≡⟨ sym (map-compose xs)⟩
+         map (to iso ∘ from iso) xs
+            ≡⟨ cong (λ f → map f xs) (fun-ext (to∘from iso)) ⟩
+         map (λ x → x) xs
+            ≡⟨ map-id xs ⟩
+         xs
+         ∎
+   }
 
 
 ----------------
@@ -346,7 +355,7 @@ open DecSet
 -}
 
 DecList : (DS : DecSet) → Σ[ DS' ∈ DecSet ] (DSet DS' ≡ List (DSet DS))
-DecList DS = {!!}
+DecList DS = {!   !}
 
 
 ----------------

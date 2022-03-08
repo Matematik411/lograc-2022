@@ -203,7 +203,7 @@ We can use `Σ`-types to express the theorem in Agda:
 
 ```
   parity₃ : (n : ℕ) → Σ[ k ∈ ℕ ] Σ[ b ∈ Fin 2 ] (n ≡ 2 * k + toℕ b)
-  parity₃ zero = {!   !}
+  parity₃ zero = zero , (zero , refl)
   parity₃ (suc n) with parity₃ n
   ... | k , zero , ξ = k , (suc zero) , ζ
     where
@@ -534,12 +534,14 @@ Composition of isomorphisms is an isomorphism, using copatterns:
 
   from (g ∘ f) = λ y → from f (from g y)
 
-  from∘to (g ∘ f) x =
+  from∘to (g ∘ f) x = 
     begin
-      from (g ∘ f) (to (g ∘ f) x)  ≡⟨ cong (from f) (from∘to g _) ⟩
-      from f (to f x)              ≡⟨ from∘to f _ ⟩
+      from f (from g (to g (to f x)))
+        ≡⟨ cong (from f) (from∘to g _) ⟩
+      from f (to f x) 
+        ≡⟨ from∘to f _ ⟩
       x
-    ∎
+      ∎
 
   to∘from (g ∘ f) y =
     begin
