@@ -612,5 +612,21 @@ from-bin-≡ b =
             from-bin'-aux b (suc n)
          ∎
          
-
-      from-bin-aux (b I) n = {!   !}
+      -- tu samo damo cez cong (λ x → (2 ^ n) + x) ?
+      -- ker da bi dali prejsnje pravilo vrze "termination error"
+      from-bin-aux (b I) n = 
+         begin
+            (2 ^ n) * suc (from-bin b + (from-bin b + zero))
+         ≡⟨ *-suc (2 ^ n) _ ⟩
+            (2 ^ n) + (2 ^ n) * (from-bin b + (from-bin b + zero))
+         ≡⟨ cong (λ x → (2 ^ n) + x) (cong (λ x → (2 ^ n) * (from-bin b + x)) (+-identityʳ (from-bin b))) ⟩
+            (2 ^ n) + (2 ^ n) * (from-bin b + from-bin b)
+         ≡⟨ cong (λ x → (2 ^ n) + x) (cong (λ x → (2 ^ n) * x) (m+m=2m (from-bin b))) ⟩
+            (2 ^ n) + (2 ^ n) * (2 * from-bin b)
+         ≡⟨ cong (λ x → (2 ^ n) + x) (sym ((*-assoc (2 ^ n) 2 (from-bin b)))) ⟩
+            (2 ^ n) + (2 ^ n) * 2 * from-bin b
+         ≡⟨ cong (λ x → (2 ^ n) + x) (cong (λ x → x * (from-bin b)) (sym (power-aux n))) ⟩
+            (2 ^ n) + (2 ^ suc n) * from-bin b
+         ≡⟨ cong (λ x → (2 ^ n) + x) (from-bin-aux b (suc n)) ⟩
+            (2 ^ n) + from-bin'-aux b (suc n)
+         ∎
