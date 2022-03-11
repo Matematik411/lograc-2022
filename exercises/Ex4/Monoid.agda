@@ -137,8 +137,20 @@ g ∘ᴹ f = record {
 infixl 7 _×ᴹ_
 
 _×ᴹ_ : ∀ {l} → Monoid {l} → Monoid {l} → Monoid {l}
-Mon₁ ×ᴹ Mon₂ = {!!}
+Mon₁ ×ᴹ Mon₂ = record
+               { M = M₁ × M₂
+               ; ε = ε₁ , ε₂
+               ; _·_ = λ (a , x) (b , y) → (a ·₁ b) , (x ·₂ y)
+               ; ε-left = λ (m₁ , m₂) → cong₂ _,_ (ε-left₁ m₁) (ε-left₂ m₂)
+               ; ε-right = λ (m₁ , m₂) → cong₂ _,_ (ε-right₁ m₁) (ε-right₂ m₂)
+               ; ·-assoc = λ (m₁ , m₂) (m₁' , m₂') (m₁'' , m₂'') → cong₂ _,_ (·-assoc₁ m₁ m₁' m₁'') (·-assoc₂ m₂ m₂' m₂'')
+               }
+   where 
+      open Monoid Mon₁ renaming (M to M₁; ε to ε₁; _·_ to _·₁_; ε-left to ε-left₁; ε-right to ε-right₁; ·-assoc to ·-assoc₁)
+      
+      open Monoid Mon₂ renaming (M to M₂; ε to ε₂; _·_ to _·₂_; ε-left to ε-left₂; ε-right to ε-right₂; ·-assoc to ·-assoc₂)
 
+   
 {-
    Prove that your definition of `×ᴹ` is indeed the Cartesian product
    of two monoids (in the category of monoids):
@@ -149,27 +161,40 @@ Mon₁ ×ᴹ Mon₂ = {!!}
 -}
 
 fst : ∀ {l} {Mon₁ Mon₂ : Monoid {l}} → Mon₁ ×ᴹ Mon₂ →ᴹ Mon₁
-fst {l} {Mon₁} {Mon₂} = {!!}
+fst {l} {Mon₁} {Mon₂} = record { 
+   map = proj₁  ; 
+   map-ε = refl ; 
+   map-· = λ _ _ → refl }
 
 snd : ∀ {l} {Mon₁ Mon₂ : Monoid {l}} → Mon₁ ×ᴹ Mon₂ →ᴹ Mon₂
-snd {l} {Mon₁} {Mon₂} = {!!}
+snd {l} {Mon₁} {Mon₂} = record { 
+   map = proj₂ ; 
+   map-ε = refl ; 
+   map-· = λ _ _ → refl }
 
 ⟨_,_⟩ : ∀ {l} {Mon₁ Mon₂ Mon₃ : Monoid {l}}
       → Mon₁ →ᴹ Mon₂ → Mon₁ →ᴹ Mon₃ → Mon₁ →ᴹ Mon₂ ×ᴹ Mon₃
       
-⟨ f , g ⟩ = {!!}
+⟨ f , g ⟩ = record { 
+   map = λ m → map₁ m , map₂ m ; 
+   map-ε = cong₂ _,_ map-ε₁ map-ε₂ ; 
+   map-· = λ m m' → cong₂ _,_ (map-·₁ m m') (map-·₂ m m') }
+
+   where 
+      open _→ᴹ_ f renaming (map to map₁; map-ε to map-ε₁; map-· to map-·₁)
+      open _→ᴹ_ g renaming (map to map₂; map-ε to map-ε₂; map-· to map-·₂)
 
 fst∘⟨,⟩ : ∀ {l} {Mon₁ Mon₂ Mon₃ : Monoid {l}}
         → {f : Mon₁ →ᴹ Mon₂} {g : Mon₁ →ᴹ Mon₃}
         → (fst ∘ᴹ ⟨ f , g ⟩) ≡ᴹ f
         
-fst∘⟨,⟩ = {!!}
+fst∘⟨,⟩ = refl
 
 snd∘⟨,⟩ : ∀ {l} {Mon₁ Mon₂ Mon₃ : Monoid {l}}
         → {f : Mon₁ →ᴹ Mon₂} {g : Mon₁ →ᴹ Mon₃}
         → (snd ∘ᴹ ⟨ f , g ⟩) ≡ᴹ g
         
-snd∘⟨,⟩ = {!!}
+snd∘⟨,⟩ = refl
 
 ⟨,⟩-unique : ∀ {l} {Mon₁ Mon₂ Mon₃ : Monoid {l}}
            → {f : Mon₁ →ᴹ Mon₂} {g : Mon₁ →ᴹ Mon₃}
@@ -178,7 +203,7 @@ snd∘⟨,⟩ = {!!}
            → (snd ∘ᴹ h) ≡ᴹ g
            → h ≡ᴹ ⟨ f , g ⟩
            
-⟨,⟩-unique p q = {!!}
+⟨,⟩-unique refl refl = refl
 
 
 -------------------------------------

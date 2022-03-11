@@ -65,6 +65,18 @@ record Key {l : Level} : Set (lsuc l) where
     Keys      : Set l
     test-keys : (k k' : Keys) → Dec (k ≡ k')
 
+
+  test-keys-refl : (k : Keys) → test-keys k k ≡ yes refl
+  test-keys-refl k with test-keys k k 
+  ... | yes refl = refl
+  ... | no p = ⊥-elim (p refl) 
+
+  test-keys-k-k' : (k k' : Keys) → (p : k ≢ k') → test-keys k k' ≡ no p
+  test-keys-k-k' k k' p with test-keys k k' 
+  ... | yes q = ⊥-elim (p q)
+  ... | no q = cong no (fun-ext (λ x → ⊥-elim (p x)))
+
+
 record Dictionary {l₁ l₂ l₃ : Level}
                   (K : Key {l₁}) (A : Set l₂) : Set (lsuc (l₁ ⊔ l₂ ⊔ l₃)) where
 
@@ -108,13 +120,22 @@ record Dictionary {l₁ l₂ l₃ : Level}
                          → lkp d k ≡ nothing
                          → lkp (add-if-new d (k , x)) k ≡ just x
                          
-  lkp-add-if-new-nothing k x d p = {!!}
+  lkp-add-if-new-nothing k x d p rewrite p = lkp-add-≡ k x d
 
   lkp-add-if-new-just : (k : Keys) (x x' : A) (d : Dict)
                       → lkp d k ≡ just x'
                       → lkp (add-if-new d (k , x)) k ≡ just x'
                       
-  lkp-add-if-new-just k x x' d p = {!!}
+  -- lkp-add-if-new-just k x x' d p rewrite p = p
+  lkp-add-if-new-just k x x' d p with lkp d k | inspect (λ (d , k) → lkp d k) (d , k)
+  ... | just v  | [ eq ] = 
+    begin
+      lkp d k 
+    ≡⟨ eq ⟩
+      just v
+    ≡⟨ p ⟩
+      just x'
+    ∎
 
 
 ----------------
@@ -139,14 +160,55 @@ module _ {l₁ l₂} (K : Key {l₁}) (A : Set l₂) where
   ListDict : Dictionary K A
   ListDict = record {
     Dict      = List (Keys × A) ;
-    emp       = {!!} ;
-    lkp       = {!!} ;
-    add       = {!!} ;
-    lkp-emp   = {!!} ;
-    lkp-add-≡ = {!!} ;
-    lkp-add-≢ = {!!} }
+    emp       = [] ;
+    lkp       = lkp-aux ;
+    add       = add-aux ;
+    lkp-emp   = λ k → refl ;
+    lkp-add-≡ = lkp-add-≡-aux ;
+    lkp-add-≢ = lkp-add-≢-aux }  
 
+  
+    where 
+      lkp-aux : List (Keys × A) → Keys → Maybe A
+      lkp-aux [] k        = nothing
+      lkp-aux ((fst , snd) ∷ xs) k with test-keys fst k 
+      ... | yes p = just snd
+      ... | no p = lkp-aux xs k
+      
+      add-aux : List (Keys × A) → Keys × A → List (Keys × A)
+      add-aux [] (k , v) = (k , v) ∷ []
+      add-aux ((fst , snd) ∷ xs) (k , v) with test-keys fst k
+      ... | yes p = (k , v) ∷ xs
+      ... | no p = (fst , snd) ∷ (add-aux xs (k , v))
 
+      -- test-keys-refl : (k : Keys) → test-keys k k ≡ yes refl
+      -- test-keys-refl k with test-keys k k 
+      -- ... | yes refl = refl
+      -- ... | no p = ⊥-elim (p refl) 
+
+      --check inspect here
+      lkp-add-≡-aux : (k : Keys) (x : A) (d : List (Keys × A)) →  lkp-aux (add-aux d (k , x)) k ≡ just x
+      lkp-add-≡-aux k x [] rewrite test-keys-refl k = refl
+      lkp-add-≡-aux k x ((k' , v') ∷ d) with test-keys k' k 
+      ... | yes p rewrite test-keys-refl k = refl
+      ... | no p with test-keys k' k
+      ... | yes q = ⊥-elim (p q)
+      ... | no q = lkp-add-≡-aux k x d
+
+      -- test-keys-k-k' : (k k' : Keys) → (p : k ≢ k') → test-keys k k' ≡ no p
+      -- test-keys-k-k' k k' p with test-keys k k' 
+      -- ... | yes q = ⊥-elim (p q)
+      -- ... | no q = cong no (fun-ext (λ x → ⊥-elim (p x)))
+
+      lkp-add-≢-aux : (k k' : Keys) (x : A) (d : List (Keys × A)) 
+        → k ≢ k' 
+        → lkp-aux (add-aux d (k , x)) k' ≡ lkp-aux d k'
+      lkp-add-≢-aux k k' x [] p rewrite test-keys-k-k' k k' p = refl
+      lkp-add-≢-aux k k' x ((k'' , v) ∷ d) p with test-keys k'' k | test-keys k'' k' 
+      ... | yes refl | yes refl = ⊥-elim (p refl) 
+      ... | yes refl | no r rewrite test-keys-k-k' k k' p = refl
+      ... | no q | yes r = {!   !} 
+      ... | no q | no r = {!   !}
 ----------------
 -- Exercise 3 --
 ----------------
