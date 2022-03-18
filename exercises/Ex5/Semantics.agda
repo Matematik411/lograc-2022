@@ -91,8 +91,9 @@ Env = AtomicFormula → ℙ
    Define logical implication between boolean values.
 -}
 
+-- we don't split by cases but define it with existing operations
 _implies_ : ℙ → ℙ → ℙ
-b₁ implies b₂ = {!!}
+b₁ implies b₂ = not b₁ or b₂
 
 {-
    The recursively defined interpretation function for formulae.
@@ -275,8 +276,18 @@ soundness : {Δ : Hypotheses}
           → {η : Env}
           → ⟦ Δ ⟧ₑ η ≤ ⟦ φ ⟧ η
 
-soundness (weaken {Δ₁} {Δ₂} φ {ψ} d) {η} = {!!}
-    
+soundness (weaken {Δ₁} {Δ₂} φ {ψ} d) {η} = 
+  beginᵇ
+    ⟦ Δ₁ ++ φ ∷ Δ₂ ⟧ₑ η
+  ≡ᵇ⟨ ⟦⟧ₑ-++ Δ₁ (φ ∷ Δ₂) ⟩
+    ⟦ Δ₁ ⟧ₑ η and ⟦ φ ∷ Δ₂ ⟧ₑ η
+  ≤⟨ {!   !} ⟩
+    {!   !} 
+  ≤⟨ {!   !} ⟩
+    ⟦ ψ ⟧ η
+  ∎ᵇ  
+
+  
 soundness (contract {Δ₁} {Δ₂} φ {ψ} d) {η} =
   beginᵇ
     ⟦ Δ₁ ++ [ φ ] ++ Δ₂ ⟧ₑ η

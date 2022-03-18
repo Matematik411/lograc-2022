@@ -209,7 +209,7 @@ infix 3 _⇔_
         → Δ ++ [ φ ] ⊢ ⊥
         → Δ ⊢ ¬ φ
 
-¬-intro d = {!!}
+¬-intro d = ⇒-intro d
 
 ¬-elim : {Δ : Hypotheses}
        → {φ : Formula}
@@ -217,7 +217,7 @@ infix 3 _⇔_
        → Δ ⊢ ¬ φ
        → Δ ⊢ ⊥
 
-¬-elim d₁ d₂ = {!!}
+¬-elim d₁ d₂ = ⇒-elim d₂ d₁
 
 {-
    Show that the last rule is also derivable when the assumptions
@@ -227,7 +227,7 @@ infix 3 _⇔_
 ¬-elim' : (φ : Formula)
         → [ φ ] ++ [ ¬ φ ] ⊢ ⊥
 
-¬-elim' φ = {!!}
+¬-elim' φ = ⇒-elim (hyp (¬ φ)) (hyp φ) 
 
 
 ----------------
@@ -253,8 +253,9 @@ cut-derivable : {Δ : Hypotheses}
               → Δ ++ [ φ ] ⊢ ψ
               ------------------
               → Δ ⊢ ψ
-
-cut-derivable d₁ d₂ = {!!}
+                     -- this one done with CTRL-C CTRL-A
+cut-derivable d₁ d₂ = ∨-elim (∨-intro₁ d₁) d₂ d₂  
+                     -- ⇒-elim (⇒-intro d₂) d₁
 
 
 --------------------
