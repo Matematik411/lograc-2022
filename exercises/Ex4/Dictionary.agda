@@ -68,7 +68,7 @@ record Key {l : Level} : Set (lsuc l) where
 
   test-keys-refl : (k : Keys) → test-keys k k ≡ yes refl
   test-keys-refl k with test-keys k k 
-  ... | yes refl = refl
+  ... | yes refl = refl 
   ... | no p = ⊥-elim (p refl) 
 
   test-keys-k-k' : (k k' : Keys) → (p : k ≢ k') → test-keys k k' ≡ no p
@@ -186,7 +186,7 @@ module _ {l₁ l₂} (K : Key {l₁}) (A : Set l₂) where
       -- ... | yes refl = refl
       -- ... | no p = ⊥-elim (p refl) 
 
-      --check inspect here
+      -- without inspect
       lkp-add-≡-aux : (k : Keys) (x : A) (d : List (Keys × A)) →  lkp-aux (add-aux d (k , x)) k ≡ just x
       lkp-add-≡-aux k x [] rewrite test-keys-refl k = refl
       lkp-add-≡-aux k x ((k' , v') ∷ d) with test-keys k' k 
@@ -194,6 +194,13 @@ module _ {l₁ l₂} (K : Key {l₁}) (A : Set l₂) where
       ... | no p with test-keys k' k
       ... | yes q = ⊥-elim (p q)
       ... | no q = lkp-add-≡-aux k x d
+
+      -- with inspect
+      lkp-add-≡-aux' : (k : Keys) (x : A) (d : List (Keys × A)) →  lkp-aux (add-aux d (k , x)) k ≡ just x
+      lkp-add-≡-aux' k x [] rewrite test-keys-refl k = refl
+      lkp-add-≡-aux' k x ((k' , v') ∷ d) with test-keys k' k | inspect (test-keys k') k
+      ... | yes p | [ eq ] rewrite test-keys-refl k = refl
+      ... | no p | [ eq ] rewrite eq = lkp-add-≡-aux' k x d
 
       -- test-keys-k-k' : (k k' : Keys) → (p : k ≢ k') → test-keys k k' ≡ no p
       -- test-keys-k-k' k k' p with test-keys k k' 
@@ -204,11 +211,12 @@ module _ {l₁ l₂} (K : Key {l₁}) (A : Set l₂) where
         → k ≢ k' 
         → lkp-aux (add-aux d (k , x)) k' ≡ lkp-aux d k'
       lkp-add-≢-aux k k' x [] p rewrite test-keys-k-k' k k' p = refl
-      lkp-add-≢-aux k k' x ((k'' , v) ∷ d) p with test-keys k'' k | test-keys k'' k' 
-      ... | yes refl | yes refl = ⊥-elim (p refl) 
-      ... | yes refl | no r rewrite test-keys-k-k' k k' p = refl
-      ... | no q | yes r = {!   !} 
-      ... | no q | no r = {!   !}
+      lkp-add-≢-aux k k' x ((k'' , v) ∷ d) p with test-keys k'' k | test-keys k'' k'
+      ... | yes refl | yes refl = ⊥-elim (p refl)
+      ... | yes refl | no w rewrite test-keys-k-k' k k' p = refl
+      ... | no q | yes refl rewrite test-keys-refl k' = refl
+      ... | no q | no w rewrite test-keys-k-k' k'' k' w = lkp-add-≢-aux k k' x d p
+
 ----------------
 -- Exercise 3 --
 ----------------
@@ -250,7 +258,20 @@ module _ {l₁ l₂} (K : Key {l₁}) (A : Set l₂) where
   ListDict' : Dictionary' K A
   ListDict' = record {
     Dict'     = ListDict K A ;
-    add-add-≡ = {!!} }
+    add-add-≡ = add-add-≡-aux }
+
+    where
+
+      open Dictionary (ListDict K A)
+
+      add-add-≡-aux : (k : Keys) (x x' : A) (d : Dict) 
+        → add (add d (k , x)) (k , x') 
+          ≡ 
+          add d (k , x')
+      add-add-≡-aux k x x' [] rewrite test-keys-refl k = refl
+      add-add-≡-aux k x x' ((k'' , x'') ∷ d) with test-keys k'' k
+      ... | yes refl rewrite test-keys-refl k = refl
+      ... | no p rewrite test-keys-k-k' k'' k p = cong ( (k'' , x'') ∷_ ) (add-add-≡-aux k x x' d) 
 
 
 -------------------------------

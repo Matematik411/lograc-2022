@@ -224,15 +224,15 @@ snd∘⟨,⟩ = refl
    https://agda.readthedocs.io/en/v2.6.2.1/language/without-k.html.
 -}
 
-uip : ∀ {l} {A : Set l} {x y : A} → (p q : x ≡ y) → p ≡ q
-uip refl refl = refl
+-- uip : ∀ {l} {A : Set l} {x y : A} → (p q : x ≡ y) → p ≡ q
+-- uip refl refl = refl
 
-{-
-   Using `uip`, prove the extensionality principle for the equalities
-   between monoid morphisms. Intuitively, `→ᴹ-ext` says that for two
-   monoid morphisms to be equal, it suffices if only their carrier
-   maps are equal (which is exactly how we defined `≡ᴹ` above).
--}
+-- {-
+--    Using `uip`, prove the extensionality principle for the equalities
+--    between monoid morphisms. Intuitively, `→ᴹ-ext` says that for two
+--    monoid morphisms to be equal, it suffices if only their carrier
+--    maps are equal (which is exactly how we defined `≡ᴹ` above).
+-- -}
 
-→ᴹ-ext :  ∀ {l} {Mon₁ Mon₂ : Monoid {l}} {f g : Mon₁ →ᴹ Mon₂} → f ≡ᴹ g → f ≡ g
-→ᴹ-ext = {!!}
+-- →ᴹ-ext :  ∀ {l} {Mon₁ Mon₂ : Monoid {l}} {f g : Mon₁ →ᴹ Mon₂} → f ≡ᴹ g → f ≡ g
+-- →ᴹ-ext = {!!}

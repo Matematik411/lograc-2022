@@ -88,11 +88,14 @@ module _ {l} (Mon : Monoid {l}) where
   Writer : Monad {l}
   Writer = record {
     T         = λ X → M × X ;
-    η         = {!!} ;
-    _>>=_     = {!!} ;
-    η-left    = {!!} ;
-    η-right   = {!!} ;
-    >>=-assoc = {!!} }
+    η         = λ x → ε , x ;
+    _>>=_     = λ (a , x) f → let (b , y) = f x in a · b , y ;
+    η-left    = λ x f → cong ( _, proj₂ (f x)) (ε-left (proj₁ (f x))) ;
+    η-right   = λ {(m , x) → cong ( _, x) (ε-right m)} ;
+    >>=-assoc = λ (a , x) f g → 
+      let (b , y) = f x in
+      let (c , z) = g y in
+      cong ( _, z) (·-assoc a b c) }
 
 
 ----------------
@@ -113,7 +116,7 @@ module _ {l} (Mon : Monoid {l}) where
   open Monad Writer
 
   write : {X : Set l} → T X → M → T X
-  write k m' = {!!}
+  write (m , x) m' = m · m' , x
 
 {-
    Prove that the `write` operation satisfies the equational theory
@@ -122,12 +125,12 @@ module _ {l} (Mon : Monoid {l}) where
 
   write-ε : {X : Set l} → (k : T X) → write k ε ≡ k
         
-  write-ε k = {!!}
+  write-ε (m , x) = cong ( _, x) (ε-right m)
 
   write-· : {X : Set l} → (k : T X) → (m m' : M)
           → write (write k m) m' ≡ write k (m · m')
  
-  write-· k m' m'' = {!!}
+  write-· (m , x) m' m'' = cong ( _, x) (·-assoc m m' m'')
 
 
 ----------------
@@ -143,8 +146,16 @@ module _ {l} (Mon : Monoid {l}) where
 -}
 
 ToMonoid : (Mon : Monad {lzero}) → Monoid {lzero}
-ToMonoid Mon = {!!}
+ToMonoid Mon = record
+   { M = T ⊤
+   ; ε = η tt
+   ; _·_ = λ m m' → m >>= λ _ → m'
+   ; ε-left = λ m → η-left tt (λ _ → m)
+   ; ε-right = λ m → η-right m
+   ; ·-assoc = λ m m' m'' → >>=-assoc m (λ _ → m') (λ _ → m'')
+   }
 
+   where open Monad Mon
 
 --------------------------
 -- Bonus Monad Exercise --
