@@ -75,12 +75,20 @@ open module ND = Ex5.NaturalDeduction AtomicFormula
 ⇒-preserves-⊤ : (φ : Formula)
               → [] ⊢ ⊤ ⇔ φ ⇒ ⊤
 
-⇒-preserves-⊤ φ = {!!}
+⇒-preserves-⊤ φ = ∧-intro 
+   (⇒-intro (⇒-intro ⊤-intro)) 
+   (⇒-intro ⊤-intro)
 
 ⇒-preserves-∧ : (φ ψ ξ : Formula)
               → [] ⊢ φ ⇒ ψ ∧ ξ ⇔ (φ ⇒ ψ) ∧ (φ ⇒ ξ)
 
-⇒-preserves-∧ φ ψ ξ = {!!}
+⇒-preserves-∧ φ ψ ξ = ∧-intro 
+   (⇒-intro (∧-intro 
+      (⇒-intro (∧-elim₁ (⇒-elim (hyp (φ ⇒ ψ ∧ ξ)) (hyp φ)))) 
+      (⇒-intro (∧-elim₂ (⇒-elim (hyp (φ ⇒ ψ ∧ ξ)) (hyp φ)))))) 
+   (⇒-intro (⇒-intro (∧-intro 
+      (⇒-elim (∧-elim₁ (hyp ((φ ⇒ ψ) ∧ (φ ⇒ ξ)))) (hyp φ)) 
+      (⇒-elim (∧-elim₂ (hyp ((φ ⇒ ψ) ∧ (φ ⇒ ξ)))) (hyp φ)))))
 
 
 ----------------
@@ -98,7 +106,14 @@ open module ND = Ex5.NaturalDeduction AtomicFormula
 demorgan₁₂ : (φ ψ : Formula)
            → [] ⊢ ¬ (φ ∨ ψ) ⇔ ¬ φ ∧ ¬ ψ
 
-demorgan₁₂ φ ψ = {!!}
+demorgan₁₂ φ ψ = ∧-intro 
+   (⇒-intro (∧-intro 
+      (⇒-intro (⇒-elim (hyp (¬ (φ ∨ ψ))) (∨-intro₁ (hyp φ)))) 
+      (⇒-intro (⇒-elim (hyp (¬ (φ ∨ ψ))) (∨-intro₂ (hyp ψ)))))) 
+   (⇒-intro (⇒-intro (∨-elim 
+      (hyp (φ ∨ ψ)) 
+      (⇒-elim (∧-elim₁ (hyp (¬ φ ∧ ¬ ψ))) (hyp φ)) 
+      (⇒-elim (∧-elim₂ (hyp (¬ φ ∧ ¬ ψ))) (hyp ψ)))))
 
 {-
    This De Morgan's law holds in only one direction in intuitionistic logic.
@@ -107,7 +122,10 @@ demorgan₁₂ φ ψ = {!!}
 demorgan₃ : (φ ψ : Formula)
           → [] ⊢ ¬ φ ∨ ¬ ψ ⇒ ¬ (φ ∧ ψ)
 
-demorgan₃ φ ψ = {!!}
+demorgan₃ φ ψ = ⇒-intro (⇒-intro (∨-elim 
+   (hyp (¬ φ ∨ ¬ ψ)) 
+   (⇒-elim (hyp (¬ φ)) (∧-elim₁ (hyp (φ ∧ ψ)))) 
+   (⇒-elim (hyp (¬ ψ)) (∧-elim₂ (hyp (φ ∧ ψ))))))
 
 {-
    To prove the other direction of this De Morgan's law, we have to work in
@@ -134,14 +152,21 @@ demorgan₄ : (φ ψ : Formula)
 demorgan₄ φ ψ LEM = 
    ⇒-intro (∨-elim 
       (LEM φ) 
-      (∨-intro₂ (⇒-intro (⇒-elim (hyp (¬ (φ ∧ ψ))) (∧-intro (hyp φ) (hyp ψ))))) 
+      (∨-intro₂ (⇒-intro (⇒-elim 
+         (hyp (¬ (φ ∧ ψ))) 
+         (∧-intro (hyp φ) (hyp ψ))))) 
       (∨-intro₁ (hyp (¬ φ)))
       )
 
 demorgan₄' : (φ ψ : Formula)
            → [ φ ∨ ¬ φ ] ⊢ ¬ (φ ∧ ψ) ⇒ ¬ φ ∨ ¬ ψ
 
-demorgan₄' φ ψ = {!!}
+demorgan₄' φ ψ = ⇒-intro (∨-elim 
+   (hyp (φ ∨ ¬ φ)) 
+   (∨-intro₂ (⇒-intro (⇒-elim 
+      (hyp (¬ (φ ∧ ψ))) 
+      (∧-intro (hyp φ) (hyp ψ))))) 
+   (∨-intro₁ (hyp (¬ φ))))
 
 
 ----------------
