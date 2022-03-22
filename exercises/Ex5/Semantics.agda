@@ -229,6 +229,40 @@ and-proj₂ b₁ b₂ =
     b₂
   ∎ᵇ
 
+--- or
+
+or-inj₁ : (b₁ b₂ : Bool)
+  → b₁ ≤ b₁ or b₂
+
+or-inj₁ b₁ false = 
+  beginᵇ
+    b₁
+  ≤⟨ b≤b ⟩
+    b₁
+  ≡ᵇ⟨ ∨-comm false b₁ ⟩
+    b₁ or false
+  ∎ᵇ
+or-inj₁ b₁ true = 
+  beginᵇ
+    b₁
+  ≤⟨ ≤-maximum b₁ ⟩
+    true
+  ≡ᵇ⟨ ∨-comm true b₁ ⟩
+    b₁ or true
+  ∎ᵇ
+
+or-inj₂ : (b₁ b₂ : Bool)
+  → b₂ ≤ b₁ or b₂
+
+or-inj₂ b₁ b₂ = 
+  beginᵇ
+    b₂
+  ≤⟨ or-inj₁ b₂ b₁ ⟩
+    b₂ or b₁
+  ≡ᵇ⟨ ∨-comm b₂ b₁ ⟩
+    b₁ or b₂
+  ∎ᵇ
+
 
 ---------------------------------
 -- Soundness of interpretation --
@@ -326,9 +360,23 @@ soundness (exchange {Δ₁} {Δ₂} φ₁ φ₂ {ψ} d) {η} =
     ⟦ ψ ⟧ η
   ∎ᵇ
 
-soundness (hyp {Δ} φ {{ p }}) {η} = {!!}
-
-soundness (⊤-intro {Δ}) {η} =
+soundness (hyp {φ ∷ Δ} φ {{ ∈-here }}) {η} =
+  beginᵇ
+    ⟦ φ ⟧ η and ⟦ Δ ⟧ₑ η
+  ≤⟨ and-proj₁ (⟦ φ ⟧ η) (⟦ Δ ⟧ₑ η) ⟩
+    ⟦ φ ⟧ η
+  ∎ᵇ
+  
+soundness (hyp {ψ ∷ Δ} φ {{ (∈-there {{ p }}) }}) {η} =
+  beginᵇ
+    ⟦ ψ ⟧ η and ⟦ Δ ⟧ₑ η
+  ≤⟨ and-proj₂ (⟦ ψ ⟧ η) (⟦ Δ ⟧ₑ η) ⟩
+    ⟦ Δ ⟧ₑ η
+  ≤⟨ soundness (hyp φ {{ p }}) ⟩
+    ⟦ φ ⟧ η
+  ∎ᵇ
+  
+soundness (⊤-intro {Δ}) {η} = 
   beginᵇ
     ⟦ Δ ⟧ₑ η
   ≤⟨ ≤-maximum (⟦ Δ ⟧ₑ η) ⟩
@@ -371,9 +419,23 @@ soundness (∧-elim₂ {Δ} {φ} {ψ} d) {η} =
     ⟦ ψ ⟧ η
   ∎ᵇ
 
-soundness (∨-intro₁ {Δ} {φ} {ψ} d) {η} = {!!}
+soundness (∨-intro₁ {Δ} {φ} {ψ} d) {η} =
+  beginᵇ
+    ⟦ Δ ⟧ₑ η
+  ≤⟨ soundness d ⟩
+    ⟦ φ ⟧ η
+  ≤⟨ or-inj₁ (⟦ φ ⟧ η) (⟦ ψ ⟧ η) ⟩
+    ⟦ φ ⟧ η or ⟦ ψ ⟧ η
+  ∎ᵇ
 
-soundness (∨-intro₂ {Δ} {φ} {ψ} d) {η} = {!!}
+soundness (∨-intro₂ {Δ} {φ} {ψ} d) {η} = 
+  beginᵇ
+    ⟦ Δ ⟧ₑ η
+  ≤⟨ soundness d ⟩
+    ⟦ ψ ⟧ η
+  ≤⟨ or-inj₂ (⟦ φ ⟧ η) (⟦ ψ ⟧ η ) ⟩
+    ⟦ φ ⟧ η or ⟦ ψ ⟧ η
+  ∎ᵇ
 
 soundness (∨-elim {Δ} {φ₁} {φ₂} {ψ} d₁ d₂ d₃) {η} = {!!}
 
@@ -399,7 +461,8 @@ open import Data.Empty       renaming (⊥ to Empty)  -- avoiding naming conflic
 open import Relation.Nullary renaming (¬_ to neg)   -- avoiding naming conflict with `¬_`
 
 consistency : neg ([] ⊢ ⊥)
-consistency = {!!}
+consistency d with soundness d {λ _ → true}
+... | ()
 
 
 ----------------
@@ -423,4 +486,6 @@ lem-soundness : {Δ : Hypotheses}
               → {η : Env}
               → ⟦ Δ ⟧ₑ η ≤ ⟦ φ ∨ ¬ φ ⟧ η
 
-lem-soundness {Δ} φ {η} = {!!}
+lem-soundness {Δ} φ {η} with ⟦ φ ⟧ η
+... | false = ≤-maximum (⟦ Δ ⟧ₑ η)
+... | true = ≤-maximum (⟦ Δ ⟧ₑ η)
