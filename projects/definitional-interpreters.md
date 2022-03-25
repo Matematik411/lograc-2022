@@ -15,7 +15,21 @@ This file contains 5 projects, depending on which feature X you choose.
   5. natural numbers and primitive recursion, and
      also general recursion (using the delay monad for the latter)
 
-* Define the equational theory for STLC + X. This can take the form
+* If you choose X that involves computational effects (2, 3, 4, 5),
+  then it will be cleaner to work in the fine-grained call-by-value
+  lambda calculus (FGCBV) instead of directly in STLC. A good overview
+  of FGCBV can be found in the article "Linearly-used state in models
+  of call-by-value" by Møgelberg and Staton
+  (http://www.cs.ox.ac.uk/people/samuel.staton/papers/calco11.pdf).
+
+* If you choose X that involves algebraic data type definitions (1), then
+  it is cleaner if type definitions form another layer around STLC.
+
+  - Of course, to begin with, you should just add sum types to STLC, 
+    do the other tasks mentioned here, and only then extend everything
+    with algebraic data type definitions.
+
+* Define the equational theory for STLC/FGCBV + X. This can take the form
   of a small-step operational semantics (i.e., directed equations).
 
 * Prove that the definitional interpreter is sound (that it validates
@@ -97,6 +111,12 @@ logic, together with the propositions as types correspondence.
 * Sections 14 and 15 of https://www.cs.bham.ac.uk/~udr/popl/04-19-TLC.pdf
 
   - an overview of the fixpoint and recursion constructs
+
+* Linearly-used state in models of call-by-value (Møgelberg and Staton)
+  (http://www.cs.ox.ac.uk/people/samuel.staton/papers/calco11.pdf)
+  
+  - similarly to the exceptions/state/nondeterminism effects above, it
+    is cleaner to work with FGCBV in the presence of general recursion
 
 * Section 3 of The Delay Monad and Restriction Categories (Uustalu,
   Veltri) (https://pure.itu.dk/ws/files/82292987/ictac17_revised.pdf)
